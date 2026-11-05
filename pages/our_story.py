@@ -53,7 +53,12 @@ layout = html.Div(
                     "2,408 housing projects started, 2,267 completed, and 102,141 "
                     "counted units in completed projects. It also records 11,922 "
                     "SIRTA crashes, 12,011 severe injuries, and 970 fatalities.",
-                    style={"color": muted, "fontSize": "16px", "lineHeight": "1.7"},
+                    style={
+                        "color": muted,
+                        "fontSize": "16px",
+                        "lineHeight": "1.7",
+                        "overflowWrap": "anywhere",
+                    },
                 ),
                 html.Ul(
                     [
@@ -99,7 +104,57 @@ layout = html.Div(
                     "serious crash outcomes. It can help identify patterns that "
                     "deserve closer investigation and support conversations about "
                     "coordinating housing growth with street-safety planning.",
-                    style={"color": muted, "fontSize": "16px", "lineHeight": "1.7"},
+                    style={
+                        "color": muted,
+                        "fontSize": "16px",
+                        "lineHeight": "1.7",
+                        "overflowWrap": "anywhere",
+                    },
+                ),
+            ],
+            style=card_style,
+        ),
+
+        html.Section(
+            [
+                html.H2("Data and integration", style={"color": navy}),
+                html.P(
+                    "The dashboard integrates New York City Department of Housing "
+                    "Preservation and Development's Affordable Housing Production by "
+                    "Building dataset with the NYC Department of Transportation's Serious "
+                    "Injury Response Tracking Analysis Program (SIRTA) dataset. The "
+                    "supplied integrated CSV covers NYC's five boroughs at the monthly "
+                    "level from 2022 through 2025. Housing fields include project and "
+                    "building-record starts, completions, and counted units; transportation "
+                    "fields include crash, injury, and fatality counts.",
+                    style={
+                        "color": muted,
+                        "fontSize": "16px",
+                        "lineHeight": "1.7",
+                        "overflowWrap": "anywhere",
+                    },
+                ),
+                html.P(
+                    "Official sources: "
+                    "Affordable Housing Production by Building "
+                    "(NYC HPD), "
+                    "https://data.cityofnewyork.us/Housing-Development/"
+                    "Affordable-Housing-Production-by-Building/hg8x-zxpr; and "
+                    "Serious-Injury-Response-Tracking-Analysis-Program (SIRTA) "
+                    "(NYC DOT), "
+                    "https://data.cityofnewyork.us/Transportation/"
+                    "Serious-Injury-Response-Tracking-Analysis-Program-/xeqp-qz8h. "
+                    "The integration is an aggregate join by borough and year-month; "
+                    "missing values are retained as represented in the supplied CSV. "
+                    "This aggregation cannot identify individual projects or crashes, "
+                    "and it does not provide population-, traffic-volume-, or "
+                    "exposure-adjusted rates.",
+                    style={
+                        "color": muted,
+                        "fontSize": "16px",
+                        "lineHeight": "1.7",
+                        "overflowWrap": "anywhere",
+                    },
                 ),
             ],
             style=card_style,

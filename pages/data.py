@@ -3,6 +3,7 @@ from pathlib import Path
 import pandas as pd
 import dash
 from dash import Input, Output, State, callback, dash_table, html
+from filter_utils import apply_filters
 
 dash.register_page(__name__, path="/", name="Data & Filters")
 
@@ -105,15 +106,26 @@ layout = html.Div(
     Input("generate-report", "n_clicks"),
     State("borough-filter", "value"),
     State("year-filter", "value"),
+    State("housing-filter", "value"),
+    State("transportation-filter", "value"),
+    State("search-input", "value"),
 )
-def filter_table(_clicks, selected_borough, selected_year):
-    filtered = df.copy()
-
-    if selected_borough:
-        filtered = filtered[filtered["borough_key"] == selected_borough]
-
-    if selected_year:
-        filtered = filtered[filtered["year"] == selected_year]
+def filter_table(
+    _clicks,
+    selected_borough,
+    selected_year,
+    housing_activity,
+    transportation_outcome,
+    search_query,
+):
+    filtered, _ = apply_filters(
+        df,
+        selected_borough,
+        selected_year,
+        housing_activity,
+        transportation_outcome,
+        search_query,
+    )
 
     return (
         filtered.to_dict("records"),

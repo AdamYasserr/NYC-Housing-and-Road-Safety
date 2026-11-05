@@ -2,7 +2,15 @@ from pathlib import Path
 
 import pandas as pd
 import dash
-from dash import Dash, dcc, html
+from dash import Dash, Input, Output, State, dcc, html, no_update
+
+from filter_utils import (
+    HOUSING_ACTIVITIES,
+    TRANSPORTATION_OUTCOMES,
+    apply_filters,
+    format_filter_summary,
+    parse_search_query,
+)
 
 data_path = (
     Path(__file__).parent
@@ -13,6 +21,7 @@ df = pd.read_csv(data_path)
 
 app = Dash(__name__, use_pages=True, suppress_callback_exceptions=True)
 server = app.server
+application = server
 
 link_style = {
     "display": "inline-block",
@@ -138,6 +147,46 @@ app.layout = html.Div(
                     ]
                 ),
 
+                html.Div(
+                    [
+                        html.Label("Search", style=label_style),
+                        dcc.Input(
+                            id="search-input",
+                            type="search",
+                            placeholder="e.g. Brooklyn 2022 new buildings",
+                            debounce=True,
+                            style={"width": "100%", "padding": "10px", "boxSizing": "border-box"},
+                        ),
+                        html.Small(id="search-status", style={"color": "#53657b"}),
+                    ]
+                ),
+
+                html.Div(
+                    [
+                        html.Label("Housing activity", style=label_style),
+                        dcc.Dropdown(
+                            id="housing-filter",
+                            options=[{"label": "All housing activity", "value": ""}]
+                            + [{"label": value, "value": value} for value in HOUSING_ACTIVITIES],
+                            value="",
+                            clearable=False,
+                        ),
+                    ]
+                ),
+
+                html.Div(
+                    [
+                        html.Label("Transportation outcome", style=label_style),
+                        dcc.Dropdown(
+                            id="transportation-filter",
+                            options=[{"label": "All transportation outcomes", "value": ""}]
+                            + [{"label": value, "value": value} for value in TRANSPORTATION_OUTCOMES],
+                            value="",
+                            clearable=False,
+                        ),
+                    ]
+                ),
+
                 html.Button(
                     "Generate Report",
                     id="generate-report",
@@ -157,7 +206,7 @@ app.layout = html.Div(
             ],
             style={
                 "display": "grid",
-                "gridTemplateColumns": "minmax(220px, 1fr) minmax(180px, 0.7fr) auto",
+                "gridTemplateColumns": "repeat(auto-fit, minmax(min(220px, 100%), 1fr))",
                 "gap": "18px",
                 "alignItems": "end",
                 "backgroundColor": "#ffffff",
@@ -170,6 +219,7 @@ app.layout = html.Div(
         ),
 
         html.Main(dash.page_container),
+        html.Div(id="report-summary"),
     ],
     style={
         "maxWidth": "1500px",
@@ -181,6 +231,95 @@ app.layout = html.Div(
         "color": "#25364d",
     },
 )
+
+@app.callback(
+    Output("borough-filter", "value"),
+    Output("year-filter", "value"),
+    Output("housing-filter", "value"),
+    Output("transportation-filter", "value"),
+    Output("search-status", "children"),
+    Input("search-input", "value"),
+)
+def apply_search_query(query):
+    parsed = parse_search_query(query)
+    if not (query or "").strip():
+        return no_update, no_update, no_update, no_update, ""
+    recognized = [
+        value
+        for value in (
+            parsed["borough"],
+            parsed["year"],
+            parsed["housing_activity"],
+            parsed["transportation_outcome"],
+        )
+        if value is not None
+    ]
+    status = f"Recognized: {', '.join(map(str, recognized))}."
+    if parsed["unrecognized_terms"]:
+        status += " Unrecognized terms ignored: " + ", ".join(
+            parsed["unrecognized_terms"]
+        ) + "."
+    if not recognized:
+        status = "No supported borough, year, housing, or transportation terms recognized."
+    return (
+        parsed["borough"] or no_update,
+        parsed["year"] or no_update,
+        parsed["housing_activity"] or no_update,
+        parsed["transportation_outcome"] or no_update,
+        status,
+    )
+
+
+@app.callback(
+    Output("report-summary", "children"),
+    Input("generate-report", "n_clicks"),
+    State("borough-filter", "value"),
+    State("year-filter", "value"),
+    State("housing-filter", "value"),
+    State("transportation-filter", "value"),
+    State("search-input", "value"),
+)
+def generate_report(_clicks, borough, year, housing, transportation, query):
+    filtered, _ = apply_filters(
+        df, borough, year, housing, transportation, query
+    )
+    criteria = format_filter_summary(
+        borough, year, housing, transportation, query
+    )
+    if filtered.empty:
+        message = "No matching borough-month records were found for " + criteria + "."
+        return html.Div(message, style={"color": "#8a3b3b", "fontWeight": "600"})
+
+    total_crashes = int(filtered["crash_records"].sum())
+    total_injuries = int(
+        (filtered["non_severe_injuries"] + filtered["severe_injuries"]).sum()
+    )
+    total_severe = int(filtered["severe_injuries"].sum())
+    total_fatalities = int(filtered["fatalities"].sum())
+    return html.Div(
+        [
+            html.H3("Results summary", style={"color": "#142d4e", "marginBottom": "8px"}),
+            html.P(f"Applied filters: {criteria}."),
+            html.P(f"{len(filtered)} borough-month records matched."),
+            html.P(
+                f"Housing: {int(filtered['housing_projects_started'].sum()):,} projects "
+                f"started and {int(filtered['housing_projects_completed'].sum()):,} completed."
+            ),
+            html.P(
+                f"Transportation: {total_crashes:,} crashes, {total_injuries:,} injuries "
+                f"({total_severe:,} severe), and {total_fatalities:,} fatalities."
+            ),
+        ],
+        style={
+            "backgroundColor": "#ffffff",
+            "border": "1px solid #dce5ef",
+            "borderRadius": "14px",
+            "padding": "18px 20px",
+            "marginBottom": "22px",
+            "color": "#53657b",
+        },
+    )
+
 
 if __name__ == "__main__":
     app.run(debug=True)

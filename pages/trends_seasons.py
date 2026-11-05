@@ -5,6 +5,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import dash
 from dash import Input, Output, State, callback, dcc, html
+from filter_utils import apply_filters
 from plotly.subplots import make_subplots
 
 dash.register_page(
@@ -119,15 +120,26 @@ layout = html.Div(
     Input("generate-report", "n_clicks"),
     State("borough-filter", "value"),
     State("year-filter", "value"),
+    State("housing-filter", "value"),
+    State("transportation-filter", "value"),
+    State("search-input", "value"),
 )
-def update_trends_seasons(_clicks, selected_borough, selected_year):
-    filtered = df.copy()
-
-    if selected_borough:
-        filtered = filtered[filtered["borough_key"] == selected_borough]
-
-    if selected_year:
-        filtered = filtered[filtered["year"] == selected_year]
+def update_trends_seasons(
+    _clicks,
+    selected_borough,
+    selected_year,
+    housing_activity,
+    transportation_outcome,
+    search_query,
+):
+    filtered, _ = apply_filters(
+        df,
+        selected_borough,
+        selected_year,
+        housing_activity,
+        transportation_outcome,
+        search_query,
+    )
 
     monthly = (
         filtered.groupby("date", as_index=False)
