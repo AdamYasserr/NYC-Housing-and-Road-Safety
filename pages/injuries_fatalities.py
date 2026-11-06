@@ -75,11 +75,11 @@ layout = html.Div(
         html.Section(
             [
                 html.H3(
-                    "RQ6 · Which boroughs recorded the most SIRTA fatalities?",
+                    "RQ6 · Are boroughs with higher affordable housing development activity also experiencing higher numbers of severe road injuries?",
                     style={"color": "#142d4e", "fontFamily": font_family},
                 ),
                 html.P(
-                    "Bars show total recorded fatalities for the selected boroughs and years.",
+                    "Each point represents one borough, using total completed affordable housing units and severe road injuries from 2022–2025.",
                     style={"color": "#53657b", "fontFamily": font_family},
                 ),
                 dcc.Graph(
@@ -148,25 +148,33 @@ def update_units_fatalities(
         legend_title_text="Borough",
     )
 
-    # RQ6: total recorded fatalities by borough.
-    borough_fatalities = (
-        filtered.groupby("borough_key", as_index=False)["fatalities"]
+    # RQ6: total completed units and severe injuries by borough for 2022–2025.
+    rq6_filtered = filtered[filtered["year"].between(2022, 2025)]
+    borough_totals = (
+        rq6_filtered.groupby("borough_key", as_index=False)[
+            ["counted_units_in_projects_completed", "severe_injuries"]
+        ]
         .sum()
-        .sort_values("fatalities", ascending=False)
     )
 
-    figure6 = px.bar(
-        borough_fatalities,
-        x="borough_key",
-        y="fatalities",
+    figure6 = px.scatter(
+        borough_totals,
+        x="counted_units_in_projects_completed",
+        y="severe_injuries",
         color="borough_key",
-        text="fatalities",
+        hover_name="borough_key",
+        hover_data={
+            "borough_key": False,
+            "counted_units_in_projects_completed": ":,",
+            "severe_injuries": ":,",
+        },
         color_discrete_sequence=px.colors.qualitative.Safe,
         labels={
             "borough_key": "Borough",
-            "fatalities": "Recorded fatalities",
+            "counted_units_in_projects_completed": "Total completed affordable housing units",
+            "severe_injuries": "Total severe road injuries",
         },
-        title="Recorded SIRTA Fatalities by Borough",
+        title="Affordable Housing Completions and Severe Road Injuries by Borough (2022–2025)",
     )
     figure6.update_layout(
         template="plotly_white",
@@ -174,9 +182,10 @@ def update_units_fatalities(
         plot_bgcolor="#ffffff",
         font={"family": font_family, "color": "#25364d"},
         margin={"l": 60, "r": 30, "t": 75, "b": 50},
-        showlegend=False,
+        legend_title_text="Borough",
     )
-    figure6.update_traces(textposition="outside")
-    figure6.update_yaxes(title_text="Recorded fatalities")
+    figure6.update_traces(marker={"size": 12, "line": {"width": 1, "color": "#ffffff"}})
+    figure6.update_xaxes(title_text="Total completed affordable housing units")
+    figure6.update_yaxes(title_text="Total severe road injuries")
 
     return figure5, figure6

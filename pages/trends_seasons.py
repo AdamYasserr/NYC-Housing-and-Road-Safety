@@ -145,7 +145,11 @@ def update_trends_seasons(
         filtered.groupby("date", as_index=False)
         .agg(
             completed_units=("counted_units_in_projects_completed", "sum"),
+            completed_projects=("housing_projects_completed", "sum"),
             crash_records=("crash_records", "sum"),
+            severe_injuries=("severe_injuries", "sum"),
+            non_severe_injuries=("non_severe_injuries", "sum"),
+            fatalities=("fatalities", "sum"),
         )
         .sort_values("date")
     )
@@ -169,6 +173,13 @@ def update_trends_seasons(
             fill="tozeroy",
             name="Completed units",
             line={"color": "#2878a5", "width": 3},
+            customdata=monthly[["completed_projects"]].to_numpy(),
+            hovertemplate=(
+                "%{x|%B %Y}<br>"
+                "Affordable housing units completed: %{y:,}<br>"
+                "Housing projects completed: %{customdata[0]:,}"
+                "<extra></extra>"
+            ),
         ),
         row=1,
         col=1,
@@ -182,6 +193,21 @@ def update_trends_seasons(
             fill="tozeroy",
             name="Crash records",
             line={"color": "#d66a4a", "width": 3},
+            customdata=monthly[
+                [
+                    "severe_injuries",
+                    "non_severe_injuries",
+                    "fatalities",
+                ]
+            ].to_numpy(),
+            hovertemplate=(
+                "%{x|%B %Y}<br>"
+                "Total crash records: %{y:,}<br>"
+                "Severe injuries: %{customdata[0]:,}<br>"
+                "Non-severe injuries: %{customdata[1]:,}<br>"
+                "Fatalities: %{customdata[2]:,}"
+                "<extra></extra>"
+            ),
         ),
         row=2,
         col=1,
