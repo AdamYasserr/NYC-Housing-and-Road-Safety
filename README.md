@@ -105,7 +105,7 @@ visualizations:
 
 | Team member | Student ID | Assigned research questions and contribution |
 |---|---:|---|
-| Adam Yasser | 16001052 | Q1 and Q6, including the corresponding visualizations and analysis |
-| Gizelle Mohamed | 16002790 | Q3 and Q4, including the corresponding visualizations and analysis |
-| Masa Bassem | 16007640 | Q2 and Q5, including the corresponding visualizations and analysis |
-| Hania Baher | 16007635 | Q7 and Q8, including the corresponding visualizations and analysis |
+| Adam Yasser | 16001052 | Q3-4, including the corresponding visualizations and analysis |
+| Gizelle Mohamed | 16002790 | Q5-6, including the corresponding visualizations and analysis |
+| Masa Bassem | 16007640 | Q1-2, including the corresponding visualizations and analysis |
+| Hania Baher | 16007635 | Q7-8, including the corresponding visualizations and analysis |
